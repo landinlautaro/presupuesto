@@ -1,0 +1,10 @@
+## .NET
+bin/
+obj/
+*.user
+*.suo
+.vs/
+appsettings.Development.json
+
+## Migrations (opcional: commiteá si querés track de schema)
+# Data/Migrations/
