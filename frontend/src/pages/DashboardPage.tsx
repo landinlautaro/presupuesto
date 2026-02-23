@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
+import { useAuth } from '../contexts/AuthContext'
 import { useMes } from '../contexts/MesContext'
 import api from '../lib/api'
+import { getDemoDashboard } from '../mocks/demoData'
 import type { ActivoResumen, DashboardResumen, ResumenMes } from '../types'
 
 interface SerieMensualItem {
@@ -36,6 +38,7 @@ function buildYearMonths(year: string): string[] {
 }
 
 export default function DashboardPage() {
+  const { isGuest } = useAuth()
   const { mes } = useMes()
   const selectedYear = useMemo(() => mes.split('-')[0], [mes])
   const [resumen, setResumen] = useState<ResumenMes | null>(null)
@@ -51,7 +54,9 @@ export default function DashboardPage() {
     setError('')
     try {
       const months = buildYearMonths(selectedYear)
-      const { data } = await api.get<DashboardResumen>(`/resumen/dashboard/${mes}`)
+      const data = isGuest
+        ? getDemoDashboard(mes)
+        : (await api.get<DashboardResumen>(`/resumen/dashboard/${mes}`)).data
       const serieByMes = new Map(data.serieMensual.map((item) => [item.mes, item]))
       setResumen(data.resumen)
       setActivos(data.activos)

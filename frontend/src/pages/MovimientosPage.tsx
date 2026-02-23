@@ -1,8 +1,10 @@
 import { useState, useEffect, useRef } from 'react'
 import { useForm } from 'react-hook-form'
 import { format } from 'date-fns'
+import { useAuth } from '../contexts/AuthContext'
 import { useMes } from '../contexts/MesContext'
 import api from '../lib/api'
+import { getDemoMovimientosByMes } from '../mocks/demoData'
 import { alertWin98, confirmWin98 } from '../lib/win98Dialog'
 import type { Movimiento } from '../types'
 
@@ -202,6 +204,7 @@ function MovimientoModal({ movimiento, onClose, onSaved }: ModalProps) {
 }
 
 export default function MovimientosPage() {
+  const { isGuest } = useAuth()
   const { mes } = useMes()
   const [movimientos, setMovimientos] = useState<Movimiento[]>([])
   const [loading, setLoading] = useState(false)
@@ -215,7 +218,9 @@ export default function MovimientosPage() {
     setLoading(true)
     setError('')
     try {
-      const { data } = await api.get<Movimiento[]>('/movimientos', { params: { mes } })
+      const data = isGuest
+        ? getDemoMovimientosByMes(mes)
+        : (await api.get<Movimiento[]>('/movimientos', { params: { mes } })).data
       setMovimientos(data)
     } catch {
       setError('No se pudieron cargar los movimientos')
@@ -224,10 +229,19 @@ export default function MovimientosPage() {
     }
   }
 
-  const openNew = () => { setEditando(null); setModalOpen(true) }
-  const openEdit = (m: Movimiento) => { setEditando(m); setModalOpen(true) }
+  const openNew = () => {
+    if (isGuest) return
+    setEditando(null)
+    setModalOpen(true)
+  }
+  const openEdit = (m: Movimiento) => {
+    if (isGuest) return
+    setEditando(m)
+    setModalOpen(true)
+  }
 
   const handleDelete = async (id: string) => {
+    if (isGuest) return
     const confirmed = await confirmWin98('Desea eliminar este movimiento?', 'Eliminar')
     if (!confirmed) return
     try {
@@ -250,7 +264,7 @@ export default function MovimientosPage() {
             <p className="pixel-font text-[20px] leading-none text-[#000080]">Movimientos</p>
             <p className="mt-1">{mes} | {movimientos.length} registros</p>
           </div>
-          <button onClick={openNew} className="win-btn">+ Nuevo movimiento</button>
+          <button onClick={openNew} disabled={isGuest} className="win-btn">+ Nuevo movimiento</button>
         </div>
       </div>
 
@@ -268,7 +282,7 @@ export default function MovimientosPage() {
         ) : movimientos.length === 0 ? (
           <div className="p-8 text-center">
             <p>No hay movimientos para {mes}</p>
-            <button onClick={openNew} className="win-btn mt-2">Agregar el primero</button>
+            {!isGuest && <button onClick={openNew} className="win-btn mt-2">Agregar el primero</button>}
           </div>
         ) : (
           <table className="win-table min-w-[860px]">
@@ -290,8 +304,8 @@ export default function MovimientosPage() {
                   <td>{mov.cuentaMedio ?? '-'}</td>
                   <td>
                     <div className="flex justify-end gap-1">
-                      <button onClick={() => openEdit(mov)} className="win-btn">Editar</button>
-                      <button onClick={() => handleDelete(mov.id)} className="win-btn">Eliminar</button>
+                      <button onClick={() => openEdit(mov)} disabled={isGuest} className="win-btn">Editar</button>
+                      <button onClick={() => handleDelete(mov.id)} disabled={isGuest} className="win-btn">Eliminar</button>
                     </div>
                   </td>
                 </tr>
@@ -301,7 +315,7 @@ export default function MovimientosPage() {
         )}
       </div>
 
-      {modalOpen && (
+      {modalOpen && !isGuest && (
         <MovimientoModal
           movimiento={editando}
           onClose={() => setModalOpen(false)}

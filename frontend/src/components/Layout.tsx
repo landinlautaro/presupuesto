@@ -21,7 +21,7 @@ function formatMesLabel(mes: string): string {
 }
 
 export default function Layout() {
-  const { logout } = useAuth()
+  const { logout, isGuest } = useAuth()
   const { mes, setMes, meses } = useMes()
   const navigate = useNavigate()
   const location = useLocation()
@@ -97,12 +97,17 @@ export default function Layout() {
                   </select>
                 </div>
                 <button onClick={handleLogout} type="button" className="win-btn">
-                  Cerrar sesion
+                  {isGuest ? 'Salir de demo' : 'Cerrar sesion'}
                 </button>
               </div>
             </div>
 
             <main className="min-h-0 flex-1 overflow-auto p-2 md:p-3">
+              {isGuest && (
+                <div className="win-alert mb-2">
+                  Modo invitado: datos de demostracion en solo lectura.
+                </div>
+              )}
               <Outlet />
             </main>
           </section>

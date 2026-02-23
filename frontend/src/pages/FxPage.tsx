@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
 import { format } from 'date-fns'
+import { useAuth } from '../contexts/AuthContext'
 import { useMes } from '../contexts/MesContext'
 import api from '../lib/api'
+import { getDemoFxAll } from '../mocks/demoData'
 import type { CotizacionActual, Fx } from '../types'
 
 interface FxRow {
@@ -39,6 +41,7 @@ function buildYearMonths(year: string): string[] {
 }
 
 export default function FxPage() {
+  const { isGuest } = useAuth()
   const { mes } = useMes()
   const selectedYear = useMemo(() => mes.split('-')[0], [mes])
   const [rows, setRows] = useState<FxRow[]>([])
@@ -55,7 +58,7 @@ export default function FxPage() {
     setError('')
     setSuccess('')
     try {
-      const { data } = await api.get<Fx[]>('/fx')
+      const data = isGuest ? getDemoFxAll() : (await api.get<Fx[]>('/fx')).data
       const byMes = new Map(data.map((item) => [item.mes, item]))
       setRows(buildYearMonths(selectedYear).map((month) => {
         const item = byMes.get(month)
@@ -80,6 +83,7 @@ export default function FxPage() {
   }
 
   const saveRow = async (row: FxRow) => {
+    if (isGuest) return
     setSavingMes(row.mes)
     setError('')
     setSuccess('')
@@ -102,6 +106,7 @@ export default function FxPage() {
   }
 
   const traerCotizacionActual = async () => {
+    if (isGuest) return
     setLoadingCotizacion(true)
     setError('')
     setSuccess('')
@@ -135,7 +140,7 @@ export default function FxPage() {
             <p className="pixel-font text-[20px] leading-none text-[#000080]">Tipo de Cambio</p>
             <p className="mt-1">Ano {selectedYear}</p>
           </div>
-          <button onClick={traerCotizacionActual} disabled={loadingCotizacion} className="win-btn">
+          <button onClick={traerCotizacionActual} disabled={loadingCotizacion || isGuest} className="win-btn">
             {loadingCotizacion ? 'Consultando...' : 'Traer cotizacion actual'}
           </button>
         </div>
@@ -162,12 +167,12 @@ export default function FxPage() {
                 return (
                   <tr key={row.mes}>
                     <td>{formatMes(row.mes)}</td>
-                    <td><input value={row.oficial} onChange={(e) => setCell(row.mes, 'oficial', e.target.value)} className="win-input ml-auto w-24 text-right" /></td>
-                    <td><input value={row.mep} onChange={(e) => setCell(row.mes, 'mep', e.target.value)} className="win-input ml-auto w-24 text-right" /></td>
-                    <td><input value={row.ccl} onChange={(e) => setCell(row.mes, 'ccl', e.target.value)} className="win-input ml-auto w-24 text-right" /></td>
-                    <td><input value={row.blue} onChange={(e) => setCell(row.mes, 'blue', e.target.value)} className="win-input ml-auto w-24 text-right" /></td>
-                    <td><input value={row.notas} onChange={(e) => setCell(row.mes, 'notas', e.target.value)} className="win-input min-w-[180px]" /></td>
-                    <td className="text-right"><button onClick={() => saveRow(row)} disabled={isSaving} className="win-btn">{isSaving ? 'Guardando...' : 'Guardar'}</button></td>
+                    <td><input value={row.oficial} onChange={(e) => setCell(row.mes, 'oficial', e.target.value)} disabled={isGuest} className="win-input ml-auto w-24 text-right" /></td>
+                    <td><input value={row.mep} onChange={(e) => setCell(row.mes, 'mep', e.target.value)} disabled={isGuest} className="win-input ml-auto w-24 text-right" /></td>
+                    <td><input value={row.ccl} onChange={(e) => setCell(row.mes, 'ccl', e.target.value)} disabled={isGuest} className="win-input ml-auto w-24 text-right" /></td>
+                    <td><input value={row.blue} onChange={(e) => setCell(row.mes, 'blue', e.target.value)} disabled={isGuest} className="win-input ml-auto w-24 text-right" /></td>
+                    <td><input value={row.notas} onChange={(e) => setCell(row.mes, 'notas', e.target.value)} disabled={isGuest} className="win-input min-w-[180px]" /></td>
+                    <td className="text-right"><button onClick={() => saveRow(row)} disabled={isSaving || isGuest} className="win-btn">{isSaving ? 'Guardando...' : 'Guardar'}</button></td>
                   </tr>
                 )
               })}

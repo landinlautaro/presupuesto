@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import axios from 'axios'
+import { useAuth } from '../contexts/AuthContext'
 import { useMes } from '../contexts/MesContext'
 import api from '../lib/api'
 import { alertWin98, confirmWin98 } from '../lib/win98Dialog'
+import { getDemoAsignacionesByMes, getDemoFxByMes, getDemoResumenMes } from '../mocks/demoData'
 import type { Asignacion, Fx, ResumenMes } from '../types'
 
 const ACTIVOS = [
@@ -240,6 +242,7 @@ const fmt = {
 }
 
 export default function AsignacionPage() {
+  const { isGuest } = useAuth()
   const { mes } = useMes()
   const [items, setItems] = useState<Asignacion[]>([])
   const [resumen, setResumen] = useState<ResumenMes | null>(null)
@@ -257,12 +260,17 @@ export default function AsignacionPage() {
     setLoading(true)
     setError('')
     try {
-      const [asignacionRes, resumenRes] = await Promise.all([
-        api.get<Asignacion[]>('/asignacion', { params: { mes } }),
-        api.get<ResumenMes>(`/resumen/${mes}`),
-      ])
-      setItems(asignacionRes.data)
-      setResumen(resumenRes.data)
+      if (isGuest) {
+        setItems(getDemoAsignacionesByMes(mes))
+        setResumen(getDemoResumenMes(mes))
+      } else {
+        const [asignacionRes, resumenRes] = await Promise.all([
+          api.get<Asignacion[]>('/asignacion', { params: { mes } }),
+          api.get<ResumenMes>(`/resumen/${mes}`),
+        ])
+        setItems(asignacionRes.data)
+        setResumen(resumenRes.data)
+      }
       setFxMes(null)
       setFxLoadedMes(null)
     } catch {
@@ -276,6 +284,11 @@ export default function AsignacionPage() {
     if (fxLoadedMes === mes || loadingFx) return
     setLoadingFx(true)
     try {
+      if (isGuest) {
+        setFxMes(getDemoFxByMes(mes))
+        setFxLoadedMes(mes)
+        return
+      }
       const fxRes = await api.get<Fx>(`/fx/${mes}`)
       setFxMes(fxRes.data)
       setFxLoadedMes(mes)
@@ -292,6 +305,7 @@ export default function AsignacionPage() {
   }
 
   const openNew = async () => {
+    if (isGuest) return
     setEditando(null)
     setModalOpen(true)
     try {
@@ -302,6 +316,7 @@ export default function AsignacionPage() {
   }
 
   const openEdit = async (asignacion: Asignacion) => {
+    if (isGuest) return
     setEditando(asignacion)
     setModalOpen(true)
     try {
@@ -312,6 +327,7 @@ export default function AsignacionPage() {
   }
 
   const handleDelete = async (id: string) => {
+    if (isGuest) return
     const confirmed = await confirmWin98('Desea eliminar esta asignacion?', 'Eliminar')
     if (!confirmed) return
     try {
@@ -330,7 +346,7 @@ export default function AsignacionPage() {
             <p className="pixel-font text-[20px] leading-none text-[#000080]">Asignacion</p>
             <p className="mt-1">{mes} | {items.length} registros</p>
           </div>
-          <button onClick={openNew} className="win-btn">+ Nueva asignacion</button>
+          <button onClick={openNew} disabled={isGuest} className="win-btn">+ Nueva asignacion</button>
         </div>
       </div>
 
@@ -349,7 +365,7 @@ export default function AsignacionPage() {
         ) : items.length === 0 ? (
           <div className="p-8 text-center">
             <p>No hay asignaciones para {mes}</p>
-            <button onClick={openNew} className="win-btn mt-2">Agregar la primera</button>
+            {!isGuest && <button onClick={openNew} className="win-btn mt-2">Agregar la primera</button>}
           </div>
         ) : (
           <table className="win-table min-w-[980px]">
@@ -372,8 +388,8 @@ export default function AsignacionPage() {
                   <td>{item.nota ?? '-'}</td>
                   <td>
                     <div className="flex justify-end gap-1">
-                      <button onClick={() => openEdit(item)} className="win-btn">Editar</button>
-                      <button onClick={() => handleDelete(item.id)} className="win-btn">Eliminar</button>
+                      <button onClick={() => openEdit(item)} disabled={isGuest} className="win-btn">Editar</button>
+                      <button onClick={() => handleDelete(item.id)} disabled={isGuest} className="win-btn">Eliminar</button>
                     </div>
                   </td>
                 </tr>
@@ -383,7 +399,7 @@ export default function AsignacionPage() {
         )}
       </div>
 
-      {modalOpen && (
+      {modalOpen && !isGuest && (
         <AsignacionModal
           mes={mes}
           asignacion={editando}

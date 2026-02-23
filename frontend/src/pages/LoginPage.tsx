@@ -4,7 +4,7 @@ import { useAuth } from '../contexts/AuthContext'
 import api from '../lib/api'
 
 export default function LoginPage() {
-  const { isAuthenticated, login } = useAuth()
+  const { isAuthenticated, login, loginGuest } = useAuth()
   const navigate = useNavigate()
 
   const [email, setEmail] = useState('')
@@ -27,6 +27,11 @@ export default function LoginPage() {
     } finally {
       setLoading(false)
     }
+  }
+
+  const handleGuestLogin = () => {
+    loginGuest()
+    navigate('/')
   }
 
   return (
@@ -75,6 +80,9 @@ export default function LoginPage() {
             {error && <p className="win-alert">{error}</p>}
 
             <div className="flex justify-end">
+              <button type="button" onClick={handleGuestLogin} disabled={loading} className="win-btn mr-2">
+                Entrar como invitado
+              </button>
               <button type="submit" disabled={loading} className="win-btn min-w-[120px]">
                 {loading ? 'Ingresando...' : 'Ingresar'}
               </button>

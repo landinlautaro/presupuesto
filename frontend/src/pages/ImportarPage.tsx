@@ -1,4 +1,5 @@
 import { DragEvent, useMemo, useState } from 'react'
+import { useAuth } from '../contexts/AuthContext'
 import api from '../lib/api'
 import type { ImportResult } from '../types'
 
@@ -10,6 +11,7 @@ function isXlsxFile(file: File): boolean {
 }
 
 export default function ImportarPage() {
+  const { isGuest } = useAuth()
   const [file, setFile] = useState<File | null>(null)
   const [isDragging, setIsDragging] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -40,6 +42,10 @@ export default function ImportarPage() {
   }
 
   const handleImport = async () => {
+    if (isGuest) {
+      setError('Modo invitado: la importacion esta deshabilitada')
+      return
+    }
     if (!file) {
       setError('Seleccione un archivo .xlsx para importar')
       return
@@ -80,7 +86,7 @@ export default function ImportarPage() {
           <p>Arrastre su archivo .xlsx aqui</p>
           <p className="mt-1 text-[11px]">o seleccione uno desde su computadora (max {MAX_SIZE_MB} MB)</p>
           <label className="mt-3 inline-block">
-            <input type="file" accept=".xlsx" className="hidden" onChange={(e) => setFileSafely(e.target.files?.[0] ?? null)} />
+            <input type="file" accept=".xlsx" disabled={isGuest} className="hidden" onChange={(e) => setFileSafely(e.target.files?.[0] ?? null)} />
             <span className="win-btn cursor-pointer">Seleccionar archivo</span>
           </label>
 
@@ -94,7 +100,7 @@ export default function ImportarPage() {
         </div>
 
         <div className="mt-3 flex flex-wrap items-center gap-2">
-          <button onClick={handleImport} disabled={loading || !file} className="win-btn">
+          <button onClick={handleImport} disabled={loading || !file || isGuest} className="win-btn">
             {loading ? 'Importando...' : 'Importar'}
           </button>
           <span>El backend ignora hojas inexistentes y filas vacias/malformadas.</span>
