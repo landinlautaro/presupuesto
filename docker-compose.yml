@@ -7,10 +7,6 @@ services:
       - "8080:8080"
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - ConnectionStrings__DefaultConnection=postgresql://postgres:6;C)(mv9JRq[eBwR@db.ibtnpzctkzzjooyuxbyp.supabase.co:5432/postgres
-      - Jwt__Secret=tu_secret_de_al_menos_32_caracteres_aqui
-      - Auth__Email=landin.lautaro@gmail.com
-      - Auth__PasswordHash=$2a$11$TXU9bieENIEA9OaeDz9Grudm/QuthO..aSR1tn4BVkIti9nI2/bD.
     depends_on:
       db:
         condition: service_healthy

@@ -19,32 +19,16 @@ export default function ImportarPage() {
 
   const fileInfo = useMemo(() => {
     if (!file) return null
-    return {
-      name: file.name,
-      sizeMb: (file.size / (1024 * 1024)).toFixed(2),
-    }
+    return { name: file.name, sizeMb: (file.size / (1024 * 1024)).toFixed(2) }
   }, [file])
 
   const setFileSafely = (next: File | null) => {
     setError('')
     setSuccess('')
     setResult(null)
-
-    if (!next) {
-      setFile(null)
-      return
-    }
-
-    if (!isXlsxFile(next)) {
-      setError('El archivo debe tener extensión .xlsx')
-      return
-    }
-
-    if (next.size > MAX_SIZE_BYTES) {
-      setError(`El archivo no puede superar ${MAX_SIZE_MB} MB`)
-      return
-    }
-
+    if (!next) return setFile(null)
+    if (!isXlsxFile(next)) return setError('El archivo debe tener extension .xlsx')
+    if (next.size > MAX_SIZE_BYTES) return setError(`El archivo no puede superar ${MAX_SIZE_MB} MB`)
     setFile(next)
   }
 
@@ -52,136 +36,81 @@ export default function ImportarPage() {
     e.preventDefault()
     e.stopPropagation()
     setIsDragging(false)
-    const dropped = e.dataTransfer.files?.[0] ?? null
-    setFileSafely(dropped)
+    setFileSafely(e.dataTransfer.files?.[0] ?? null)
   }
 
   const handleImport = async () => {
     if (!file) {
-      setError('Seleccioná un archivo .xlsx para importar')
+      setError('Seleccione un archivo .xlsx para importar')
       return
     }
-
     setLoading(true)
     setError('')
     setSuccess('')
     setResult(null)
-
     const formData = new FormData()
     formData.append('file', file)
-
     try {
       const { data } = await api.post<ImportResult>('/import/xlsx', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       })
       setResult(data)
-      setSuccess('Importación completada correctamente')
+      setSuccess('Importacion completada correctamente')
     } catch {
-      setError('No se pudo importar el archivo. Verificá el formato y volvé a intentar.')
+      setError('No se pudo importar el archivo')
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <div>
-      <div className="mb-5">
-        <h1 className="text-xl font-semibold text-slate-900">Importar</h1>
-        <p className="text-slate-500 text-sm mt-0.5">
-          Subí un archivo .xlsx con hojas Movimientos, Asignacion y/o FX.
-        </p>
+    <div className="space-y-3">
+      <div className="win-panel p-2">
+        <p className="pixel-font text-[20px] leading-none text-[#000080]">Importar</p>
+        <p className="mt-1">Suba un archivo .xlsx con hojas Movimientos, Asignacion y/o FX.</p>
       </div>
 
-      <div className="bg-white rounded-xl border border-gray-200 p-5">
+      <div className="win-panel p-3">
         <div
-          onDragOver={(e) => {
-            e.preventDefault()
-            setIsDragging(true)
-          }}
-          onDragLeave={(e) => {
-            e.preventDefault()
-            setIsDragging(false)
-          }}
+          onDragOver={(e) => { e.preventDefault(); setIsDragging(true) }}
+          onDragLeave={(e) => { e.preventDefault(); setIsDragging(false) }}
           onDrop={handleDrop}
-          className={`border-2 border-dashed rounded-xl p-8 text-center transition-colors ${
-            isDragging ? 'border-slate-500 bg-slate-50' : 'border-gray-300 bg-gray-50'
-          }`}
+          className={`p-6 text-center ${isDragging ? 'win-inset bg-[#e8f1ff]' : 'win-inset'}`}
         >
-          <p className="text-sm text-slate-700 font-medium">Arrastrá tu archivo .xlsx aquí</p>
-          <p className="text-xs text-slate-500 mt-1">o seleccioná uno desde tu computadora (máx {MAX_SIZE_MB} MB)</p>
-
-          <label className="inline-flex mt-4">
-            <input
-              type="file"
-              accept=".xlsx"
-              className="hidden"
-              onChange={(e) => setFileSafely(e.target.files?.[0] ?? null)}
-            />
-            <span
-              className="cursor-pointer bg-slate-900 text-white text-sm font-medium px-4 py-2 rounded-lg
-                         hover:bg-slate-700 transition-colors"
-            >
-              Seleccionar archivo
-            </span>
+          <p>Arrastre su archivo .xlsx aqui</p>
+          <p className="mt-1 text-[11px]">o seleccione uno desde su computadora (max {MAX_SIZE_MB} MB)</p>
+          <label className="mt-3 inline-block">
+            <input type="file" accept=".xlsx" className="hidden" onChange={(e) => setFileSafely(e.target.files?.[0] ?? null)} />
+            <span className="win-btn cursor-pointer">Seleccionar archivo</span>
           </label>
 
           {fileInfo && (
-            <div className="mt-4 inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-white border border-gray-200">
-              <span className="text-xs text-slate-700">{fileInfo.name}</span>
-              <span className="text-xs text-slate-400">({fileInfo.sizeMb} MB)</span>
-              <button
-                onClick={() => setFileSafely(null)}
-                className="text-xs text-red-500 hover:text-red-700"
-              >
-                Quitar
-              </button>
+            <div className="win-panel mx-auto mt-3 inline-flex items-center gap-2 px-2 py-1">
+              <span title={fileInfo.name}>{fileInfo.name}</span>
+              <span>({fileInfo.sizeMb} MB)</span>
+              <button onClick={() => setFileSafely(null)} className="win-btn">Quitar</button>
             </div>
           )}
         </div>
 
-        <div className="mt-4 flex items-center gap-3">
-          <button
-            onClick={handleImport}
-            disabled={loading || !file}
-            className="bg-slate-900 text-white text-sm font-medium px-4 py-2 rounded-lg
-                       hover:bg-slate-700 disabled:opacity-50 transition-colors"
-          >
+        <div className="mt-3 flex flex-wrap items-center gap-2">
+          <button onClick={handleImport} disabled={loading || !file} className="win-btn">
             {loading ? 'Importando...' : 'Importar'}
           </button>
-          <span className="text-xs text-slate-500">
-            El backend ignora hojas inexistentes y filas vacías/malformadas.
-          </span>
+          <span>El backend ignora hojas inexistentes y filas vacias/malformadas.</span>
         </div>
       </div>
 
-      {error && (
-        <div className="mt-4 bg-red-50 border border-red-200 text-red-700 rounded-lg px-4 py-3 text-sm">
-          {error}
-        </div>
-      )}
-
-      {success && (
-        <div className="mt-4 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-lg px-4 py-3 text-sm">
-          {success}
-        </div>
-      )}
+      {error && <div className="win-alert">{error}</div>}
+      {success && <div className="win-success">{success}</div>}
 
       {result && (
-        <div className="mt-4 bg-white rounded-xl border border-gray-200 p-5">
-          <h2 className="text-sm font-semibold text-slate-800 mb-3">Resultado de importación</h2>
-          <div className="grid grid-cols-3 gap-4">
-            <div className="rounded-lg border border-gray-200 p-4">
-              <p className="text-xs text-slate-500 mb-1">Movimientos insertados</p>
-              <p className="text-2xl font-semibold text-slate-900">{result.movimientosInsertados}</p>
-            </div>
-            <div className="rounded-lg border border-gray-200 p-4">
-              <p className="text-xs text-slate-500 mb-1">Asignaciones insertadas</p>
-              <p className="text-2xl font-semibold text-slate-900">{result.asignacionInsertados}</p>
-            </div>
-            <div className="rounded-lg border border-gray-200 p-4">
-              <p className="text-xs text-slate-500 mb-1">FX upsertados</p>
-              <p className="text-2xl font-semibold text-slate-900">{result.fxUpsertados}</p>
-            </div>
+        <div className="win-panel p-3">
+          <p className="pixel-font text-[18px] leading-none">Resultado de importacion</p>
+          <div className="mt-2 grid grid-cols-1 gap-2 md:grid-cols-3">
+            <div className="win-card"><p>Movimientos insertados</p><p className="pixel-font text-[22px]">{result.movimientosInsertados}</p></div>
+            <div className="win-card"><p>Asignaciones insertadas</p><p className="pixel-font text-[22px]">{result.asignacionInsertados}</p></div>
+            <div className="win-card"><p>FX upsertados</p><p className="pixel-font text-[22px]">{result.fxUpsertados}</p></div>
           </div>
         </div>
       )}

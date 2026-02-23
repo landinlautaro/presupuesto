@@ -1,29 +1,34 @@
-import { NavLink, Outlet, useNavigate } from 'react-router-dom'
+import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { useMes } from '../contexts/MesContext'
 
 const NAV_ITEMS = [
-  { to: '/',          label: 'Dashboard',        end: true  },
-  { to: '/movimientos', label: 'Movimientos',     end: false },
-  { to: '/asignacion',  label: 'Asignación',      end: false },
-  { to: '/fx',          label: 'Tipo de Cambio',  end: false },
-  { to: '/importar',    label: 'Importar',        end: false },
+  { to: '/', label: 'Dashboard', end: true },
+  { to: '/movimientos', label: 'Movimientos', end: false },
+  { to: '/asignacion', label: 'Asignacion', end: false },
+  { to: '/fx', label: 'Tipo de Cambio', end: false },
+  { to: '/importar', label: 'Importar', end: false },
 ]
 
 const MESES_ES = [
-  'Enero','Febrero','Marzo','Abril','Mayo','Junio',
-  'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre',
+  'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+  'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre',
 ]
 
 function formatMesLabel(mes: string): string {
   const [year, month] = mes.split('-')
-  return `${MESES_ES[parseInt(month) - 1]} ${year}`
+  return `${MESES_ES[parseInt(month, 10) - 1]} ${year}`
 }
 
 export default function Layout() {
   const { logout } = useAuth()
   const { mes, setMes, meses } = useMes()
   const navigate = useNavigate()
+  const location = useLocation()
+
+  const activeLabel = NAV_ITEMS.find((item) =>
+    item.end ? location.pathname === item.to : location.pathname.startsWith(item.to)
+  )?.label ?? 'Presupuesto'
 
   const handleLogout = () => {
     logout()
@@ -31,63 +36,82 @@ export default function Layout() {
   }
 
   return (
-    <div className="flex h-screen overflow-hidden bg-gray-50">
-
-      {/* ── Sidebar ─────────────────────────────────────────────────────────── */}
-      <aside className="w-56 bg-slate-900 flex flex-col shrink-0">
-        <div className="px-5 py-5 border-b border-slate-700">
-          <h1 className="text-white font-bold text-base tracking-wide">Presupuesto</h1>
-          <p className="text-slate-400 text-xs mt-0.5">Control financiero</p>
+    <div className="desktop-grid min-h-screen p-2 md:p-4">
+      <div className="win-window mx-auto flex min-h-[95vh] max-w-[1400px] flex-col">
+        <div className="win-titlebar">
+          <div className="win-title">
+            <span className="win-title-icon" />
+            <span className="pixel-font text-[18px] leading-none">Presupuesto.exe</span>
+          </div>
+          <div className="win-controls">
+            <button className="win-control-btn" type="button" aria-label="Minimizar">_</button>
+            <button className="win-control-btn" type="button" aria-label="Maximizar">[]</button>
+            <button className="win-control-btn" type="button" aria-label="Cerrar">X</button>
+          </div>
         </div>
 
-        <nav className="flex-1 px-2 py-4 space-y-0.5">
-          {NAV_ITEMS.map(({ to, label, end }) => (
-            <NavLink
-              key={to}
-              to={to}
-              end={end}
-              className={({ isActive }) =>
-                `flex items-center px-3 py-2 rounded-lg text-sm transition-colors ${
-                  isActive
-                    ? 'bg-slate-700 text-white font-medium'
-                    : 'text-slate-400 hover:bg-slate-800 hover:text-white'
-                }`
-              }
-            >
-              {label}
-            </NavLink>
-          ))}
-        </nav>
-      </aside>
+        <div className="win-menubar">
+          <button type="button" className="win-menuitem">File</button>
+          <button type="button" className="win-menuitem">Edit</button>
+          <button type="button" className="win-menuitem">View</button>
+          <button type="button" className="win-menuitem">Help</button>
+        </div>
 
-      {/* ── Main ────────────────────────────────────────────────────────────── */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+        <div className="grid min-h-0 flex-1 grid-cols-1 gap-2 p-2 md:grid-cols-[240px_minmax(0,1fr)]">
+          <aside className="win-panel flex min-h-[220px] flex-col p-2">
+            <div className="win-inset mb-2 p-2">
+              <p className="pixel-font text-[18px] leading-none">Navegacion</p>
+            </div>
+            <nav className="flex flex-1 flex-col gap-1">
+              {NAV_ITEMS.map(({ to, label, end }) => (
+                <NavLink
+                  key={to}
+                  to={to}
+                  end={end}
+                  className={({ isActive }) => `win-btn text-left ${isActive ? 'is-active' : ''}`}
+                >
+                  {label}
+                </NavLink>
+              ))}
+            </nav>
+          </aside>
 
-        {/* Header */}
-        <header className="h-14 bg-white border-b border-gray-200 flex items-center justify-between px-6 shrink-0">
-          <select
-            value={mes}
-            onChange={(e) => setMes(e.target.value)}
-            className="border border-gray-300 rounded-md px-3 py-1.5 text-sm bg-white
-                       focus:outline-none focus:ring-2 focus:ring-slate-500 cursor-pointer"
-          >
-            {meses.map((m) => (
-              <option key={m} value={m}>{formatMesLabel(m)}</option>
-            ))}
-          </select>
+          <section className="win-panel flex min-h-0 flex-col">
+            <div className="flex flex-wrap items-end justify-between gap-2 border-b border-[#808080] p-2">
+              <div>
+                <p className="pixel-font text-[18px] leading-none text-[#000080]">{activeLabel}</p>
+                <p className="mt-1 text-[12px]">Sistema de control financiero</p>
+              </div>
 
-          <button
-            onClick={handleLogout}
-            className="text-sm text-gray-500 hover:text-gray-900 transition-colors"
-          >
-            Cerrar sesión
-          </button>
-        </header>
+              <div className="flex flex-wrap items-center gap-2">
+                <div>
+                  <label className="win-label mb-1">Mes Activo</label>
+                  <select
+                    value={mes}
+                    onChange={(e) => setMes(e.target.value)}
+                    className="win-select min-w-[180px]"
+                  >
+                    {meses.map((m) => (
+                      <option key={m} value={m}>{formatMesLabel(m)}</option>
+                    ))}
+                  </select>
+                </div>
+                <button onClick={handleLogout} type="button" className="win-btn">
+                  Cerrar sesion
+                </button>
+              </div>
+            </div>
 
-        {/* Contenido de la página */}
-        <main className="flex-1 overflow-auto p-6">
-          <Outlet />
-        </main>
+            <main className="min-h-0 flex-1 overflow-auto p-2 md:p-3">
+              <Outlet />
+            </main>
+          </section>
+        </div>
+
+        <div className="win-statusbar">
+          <div className="win-statuscell">Listo</div>
+          <div className="win-statuscell">{mes}</div>
+        </div>
       </div>
     </div>
   )

@@ -7,12 +7,11 @@ export default function LoginPage() {
   const { isAuthenticated, login } = useAuth()
   const navigate = useNavigate()
 
-  const [email, setEmail]       = useState('')
+  const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [error, setError]       = useState('')
-  const [loading, setLoading]   = useState(false)
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
 
-  // Si ya está autenticado, redirige al dashboard
   if (isAuthenticated) return <Navigate to="/" replace />
 
   const handleSubmit = async (e: FormEvent) => {
@@ -24,62 +23,69 @@ export default function LoginPage() {
       login(data.token)
       navigate('/')
     } catch {
-      setError('Email o contraseña incorrectos')
+      setError('Email o contrasena incorrectos')
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <div className="min-h-screen bg-slate-900 flex items-center justify-center px-4">
-      <div className="bg-white rounded-2xl shadow-xl p-8 w-full max-w-sm">
-        <h1 className="text-2xl font-bold text-slate-900">Presupuesto</h1>
-        <p className="text-slate-500 text-sm mt-1 mb-6">Ingresá tus credenciales</p>
+    <div className="desktop-grid flex min-h-screen items-center justify-center p-3">
+      <div className="win-window w-full max-w-[420px]">
+        <div className="win-titlebar">
+          <div className="win-title">
+            <span className="win-title-icon" />
+            <span>Login</span>
+          </div>
+          <div className="win-controls">
+            <button className="win-control-btn" type="button" aria-label="Cerrar">X</button>
+          </div>
+        </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">
-              Email
-            </label>
-            <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              autoFocus
-              placeholder="tu@email.com"
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm
-                         focus:outline-none focus:ring-2 focus:ring-slate-500"
-            />
+        <div className="p-3">
+          <div className="win-panel p-3">
+            <h1 className="pixel-font text-[22px] leading-none">Presupuesto 98</h1>
+            <p className="mt-1 text-[12px]">Ingrese sus credenciales para continuar.</p>
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">
-              Contraseña
-            </label>
-            <input
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm
-                         focus:outline-none focus:ring-2 focus:ring-slate-500"
-            />
-          </div>
+          <form onSubmit={handleSubmit} className="mt-3 space-y-3">
+            <div>
+              <label className="win-label">Email</label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                autoFocus
+                className="win-input"
+              />
+            </div>
 
-          {error && (
-            <p className="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">{error}</p>
-          )}
+            <div>
+              <label className="win-label">Contrasena</label>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                className="win-input"
+              />
+            </div>
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full bg-slate-900 text-white rounded-lg py-2.5 text-sm font-medium
-                       hover:bg-slate-700 disabled:opacity-50 transition-colors"
-          >
-            {loading ? 'Ingresando…' : 'Ingresar'}
-          </button>
-        </form>
+            {error && <p className="win-alert">{error}</p>}
+
+            <div className="flex justify-end">
+              <button type="submit" disabled={loading} className="win-btn min-w-[120px]">
+                {loading ? 'Ingresando...' : 'Ingresar'}
+              </button>
+            </div>
+          </form>
+        </div>
+
+        <div className="win-statusbar">
+          <div className="win-statuscell">Autenticacion requerida</div>
+          <div className="win-statuscell">v1.0</div>
+        </div>
       </div>
     </div>
   )

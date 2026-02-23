@@ -18,3 +18,17 @@ public record ActivoResumenItem(
     decimal TotalUsd,
     decimal Porcentaje        // % sobre el total ARS de todos los activos
 );
+
+/// <summary>Serie mensual para graficos del dashboard.</summary>
+public record SerieMensualItemResponse(
+    string Mes,
+    decimal IngresosArs,
+    decimal EgresosArs
+);
+
+/// <summary>Payload agregado del dashboard para reducir llamadas.</summary>
+public record DashboardResumenResponse(
+    ResumenMesResponse Resumen,
+    List<ActivoResumenItem> Activos,
+    List<SerieMensualItemResponse> SerieMensual
+);

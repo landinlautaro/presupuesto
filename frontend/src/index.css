@@ -1,3 +1,307 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
+
+:root {
+  --win-gray: #c0c0c0;
+  --win-gray-light: #dfdfdf;
+  --win-gray-mid: #a0a0a0;
+  --win-gray-dark: #808080;
+  --win-black: #000000;
+  --win-white: #ffffff;
+  --win-blue: #000080;
+  --win-blue-accent: #0078d7;
+  --win-tooltip: #ffffe1;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  width: 100%;
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  color: var(--win-black);
+  background:
+    linear-gradient(135deg, #9aaec7 0%, #7f95b5 55%, #8ea0ba 100%);
+  font-family: Arial, "MS Sans Serif", sans-serif;
+  font-size: 12px;
+  line-height: 1.2;
+}
+
+.pixel-font {
+  font-family: 'VT323', monospace;
+  letter-spacing: 0.03em;
+}
+
+.desktop-grid {
+  background-image:
+    linear-gradient(to right, rgba(255, 255, 255, 0.08) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.08) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+.win-window {
+  background: var(--win-gray);
+  border-top: 2px solid var(--win-white);
+  border-left: 2px solid var(--win-white);
+  border-right: 2px solid var(--win-gray-dark);
+  border-bottom: 2px solid var(--win-gray-dark);
+  box-shadow: inset 1px 1px 0 var(--win-gray-light), inset -1px -1px 0 var(--win-black);
+}
+
+.win-panel {
+  background: var(--win-gray);
+  border-top: 2px solid var(--win-gray-light);
+  border-left: 2px solid var(--win-gray-light);
+  border-right: 2px solid var(--win-gray-dark);
+  border-bottom: 2px solid var(--win-gray-dark);
+  box-shadow: inset 1px 1px 0 var(--win-white), inset -1px -1px 0 var(--win-gray-mid);
+}
+
+.win-inset {
+  background: var(--win-white);
+  border-top: 2px solid var(--win-gray-dark);
+  border-left: 2px solid var(--win-gray-dark);
+  border-right: 2px solid var(--win-white);
+  border-bottom: 2px solid var(--win-white);
+  box-shadow: inset 1px 1px 0 var(--win-black), inset -1px -1px 0 var(--win-gray-light);
+}
+
+.win-titlebar {
+  min-height: 25px;
+  padding: 3px 4px;
+  color: var(--win-white);
+  background: linear-gradient(90deg, #000080 0%, #0b3e9d 55%, #1b63ca 100%);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.win-title {
+  font-weight: 700;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.win-title-icon {
+  width: 16px;
+  height: 16px;
+  background: linear-gradient(135deg, #0080ff 0%, #004a99 100%);
+  border: 1px solid var(--win-white);
+}
+
+.win-controls {
+  display: flex;
+  gap: 2px;
+}
+
+.win-control-btn {
+  width: 18px;
+  height: 16px;
+  padding: 0;
+  background: var(--win-gray);
+  color: var(--win-black);
+  border-top: 2px solid var(--win-white);
+  border-left: 2px solid var(--win-white);
+  border-right: 2px solid var(--win-gray-dark);
+  border-bottom: 2px solid var(--win-gray-dark);
+  font-size: 9px;
+  line-height: 1;
+  font-weight: 700;
+}
+
+.win-control-btn:active {
+  border-top-color: var(--win-gray-dark);
+  border-left-color: var(--win-gray-dark);
+  border-right-color: var(--win-white);
+  border-bottom-color: var(--win-white);
+}
+
+.win-menubar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 4px 6px;
+  border-top: 1px solid var(--win-gray-light);
+  border-bottom: 1px solid var(--win-gray-dark);
+  background: var(--win-gray);
+}
+
+.win-menuitem {
+  color: var(--win-black);
+  text-decoration: none;
+  padding: 1px 4px;
+}
+
+.win-menuitem:hover {
+  background: var(--win-blue-accent);
+  color: var(--win-white);
+}
+
+.win-statusbar {
+  margin-top: auto;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 4px;
+  padding: 3px;
+  border-top: 1px solid var(--win-gray-dark);
+  background: var(--win-gray);
+}
+
+.win-statuscell {
+  padding: 2px 6px;
+  min-height: 20px;
+  background: var(--win-gray);
+  border-top: 1px solid var(--win-gray-dark);
+  border-left: 1px solid var(--win-gray-dark);
+  border-right: 1px solid var(--win-white);
+  border-bottom: 1px solid var(--win-white);
+}
+
+.win-btn {
+  background: var(--win-gray);
+  color: var(--win-black);
+  border-top: 2px solid var(--win-white);
+  border-left: 2px solid var(--win-white);
+  border-right: 2px solid var(--win-gray-dark);
+  border-bottom: 2px solid var(--win-gray-dark);
+  border-radius: 0;
+  padding: 4px 10px;
+  min-height: 26px;
+}
+
+.win-btn:active,
+.win-btn.is-active {
+  border-top-color: var(--win-gray-dark);
+  border-left-color: var(--win-gray-dark);
+  border-right-color: var(--win-white);
+  border-bottom-color: var(--win-white);
+}
+
+.win-btn:disabled {
+  color: #666;
+}
+
+.win-input,
+.win-select,
+.win-textarea {
+  width: 100%;
+  background: var(--win-white);
+  color: var(--win-black);
+  border-top: 2px solid var(--win-gray-dark);
+  border-left: 2px solid var(--win-gray-dark);
+  border-right: 2px solid var(--win-white);
+  border-bottom: 2px solid var(--win-white);
+  border-radius: 0;
+  padding: 3px 6px;
+  min-height: 26px;
+  caret-color: var(--win-black);
+}
+
+.win-textarea {
+  resize: vertical;
+}
+
+.win-input:focus,
+.win-select:focus,
+.win-textarea:focus {
+  outline: 1px dotted var(--win-black);
+  outline-offset: -4px;
+}
+
+.win-label {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.win-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.win-table th {
+  font-weight: 700;
+  text-align: left;
+  padding: 6px 8px;
+  background: var(--win-gray);
+  border-bottom: 1px solid var(--win-gray-dark);
+  border-right: 1px solid var(--win-gray-dark);
+}
+
+.win-table td {
+  padding: 6px 8px;
+  border-bottom: 1px solid #d2d2d2;
+}
+
+.win-table tbody tr:hover {
+  background: #e5edf9;
+}
+
+.win-card {
+  background: var(--win-gray);
+  border-top: 2px solid var(--win-gray-light);
+  border-left: 2px solid var(--win-gray-light);
+  border-right: 2px solid var(--win-gray-dark);
+  border-bottom: 2px solid var(--win-gray-dark);
+  padding: 10px;
+}
+
+.win-alert {
+  background: #ffdcdc;
+  border: 1px solid #990000;
+  padding: 8px;
+}
+
+.win-success {
+  background: #dff6df;
+  border: 1px solid #2c6c2c;
+  padding: 8px;
+}
+
+.win-tooltip {
+  background: var(--win-tooltip);
+  border: 1px solid var(--win-black);
+  padding: 2px 4px;
+  font-size: 11px;
+}
+
+::-webkit-scrollbar {
+  width: 16px;
+  height: 16px;
+  background: var(--win-gray);
+}
+
+::-webkit-scrollbar-thumb {
+  background: #b0b0b0;
+  border-top: 2px solid var(--win-white);
+  border-left: 2px solid var(--win-white);
+  border-right: 2px solid var(--win-gray-dark);
+  border-bottom: 2px solid var(--win-gray-dark);
+}
+
+::-webkit-scrollbar-track {
+  background: var(--win-gray);
+}
+
+::-webkit-scrollbar-corner {
+  background: var(--win-gray);
+}
+
+* {
+  scrollbar-width: auto;
+  scrollbar-color: #9f9f9f var(--win-gray);
+}

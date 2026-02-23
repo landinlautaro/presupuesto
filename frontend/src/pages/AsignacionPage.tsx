@@ -1,24 +1,15 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import axios from 'axios'
-import { format } from 'date-fns'
 import { useMes } from '../contexts/MesContext'
 import api from '../lib/api'
+import { alertWin98, confirmWin98 } from '../lib/win98Dialog'
 import type { Asignacion, Fx, ResumenMes } from '../types'
 
 const ACTIVOS = [
-  'USD (billete)',
-  'USD (MEP)',
-  'FCI money market',
-  'Plazo fijo',
-  'Bonos',
-  'CEDEAR',
-  'ETF',
-  'Crypto (BTC)',
-  'Crypto (ETH)',
-  'Otros',
+  'USD (billete)', 'USD (MEP)', 'FCI money market', 'Plazo fijo', 'Bonos',
+  'CEDEAR', 'ETF', 'Crypto (BTC)', 'Crypto (ETH)', 'Otros',
 ]
-
 const FX_TIPOS = ['Oficial', 'MEP', 'CCL', 'Blue'] as const
 
 interface AsignacionForm {
@@ -50,7 +41,6 @@ function getTcByTipo(fxMes: Fx | null, fxTipo: string): number | null {
 function AsignacionModal({ mes, asignacion, fxMes, onClose, onSaved }: AsignacionModalProps) {
   const defaultFxTipo: AsignacionForm['fxTipo'] = 'MEP'
   const defaultTc = getTcByTipo(fxMes, defaultFxTipo) ?? 0
-
   const {
     register,
     handleSubmit,
@@ -96,18 +86,14 @@ function AsignacionModal({ mes, asignacion, fxMes, onClose, onSaved }: Asignacio
   }, [fxMes, fxTipo, setValue, asignacion])
 
   useEffect(() => {
-    const h = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose()
-    }
+    const h = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
     document.addEventListener('keydown', h)
     return () => document.removeEventListener('keydown', h)
   }, [onClose])
 
   useEffect(() => {
     document.body.style.overflow = 'hidden'
-    return () => {
-      document.body.style.overflow = ''
-    }
+    return () => { document.body.style.overflow = '' }
   }, [])
 
   const onSubmit = async (data: AsignacionForm) => {
@@ -129,66 +115,43 @@ function AsignacionModal({ mes, asignacion, fxMes, onClose, onSaved }: Asignacio
       }
       onSaved()
     } catch {
-      setSubmitError('Error al guardar. Intentá de nuevo.')
+      setSubmitError('Error al guardar. Intente de nuevo.')
     }
   }
 
   return (
-    <div
-      className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
-      onClick={onClose}
-    >
-      <div
-        className="bg-white rounded-2xl shadow-xl w-full max-w-xl"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
-          <h2 className="text-base font-semibold text-slate-900">
-            {asignacion ? 'Editar asignación' : 'Nueva asignación'}
-          </h2>
-          <button
-            onClick={onClose}
-            className="text-slate-400 hover:text-slate-700 text-xl leading-none"
-            aria-label="Cerrar"
-          >
-            ×
-          </button>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-3" onClick={onClose}>
+      <div className="win-window w-full max-w-[820px]" onClick={(e) => e.stopPropagation()}>
+        <div className="win-titlebar">
+          <div className="win-title">
+            <span className="win-title-icon" />
+            <span>{asignacion ? 'Editar Asignacion' : 'Nueva Asignacion'}</span>
+          </div>
+          <div className="win-controls">
+            <button type="button" onClick={onClose} className="win-control-btn">X</button>
+          </div>
         </div>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="px-6 py-5 space-y-4">
-          <div className="grid grid-cols-2 gap-4">
+        <form onSubmit={handleSubmit(onSubmit)} className="p-3">
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
             <div>
-              <label className="block text-xs font-medium text-slate-600 mb-1">Fecha *</label>
-              <input
-                type="date"
-                {...register('fecha', { required: 'Requerido' })}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm
-                           focus:outline-none focus:ring-2 focus:ring-slate-500"
-              />
-              {errors.fecha && <p className="text-xs text-red-600 mt-1">{errors.fecha.message}</p>}
+              <label className="win-label">Fecha *</label>
+              <input type="date" {...register('fecha', { required: 'Requerido' })} className="win-input" />
+              {errors.fecha && <p className="mt-1 text-[11px] text-[#990000]">{errors.fecha.message}</p>}
             </div>
-
             <div>
-              <label className="block text-xs font-medium text-slate-600 mb-1">Activo *</label>
-              <select
-                {...register('activo', { required: 'Requerido' })}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white
-                           focus:outline-none focus:ring-2 focus:ring-slate-500"
-              >
-                <option value="">Seleccioná un activo</option>
-                {ACTIVOS.map((activo) => (
-                  <option key={activo} value={activo}>
-                    {activo}
-                  </option>
-                ))}
+              <label className="win-label">Activo *</label>
+              <select {...register('activo', { required: 'Requerido' })} className="win-select">
+                <option value="">Seleccione</option>
+                {ACTIVOS.map((activo) => <option key={activo} value={activo}>{activo}</option>)}
               </select>
-              {errors.activo && <p className="text-xs text-red-600 mt-1">{errors.activo.message}</p>}
+              {errors.activo && <p className="mt-1 text-[11px] text-[#990000]">{errors.activo.message}</p>}
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-4">
+          <div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-3">
             <div>
-              <label className="block text-xs font-medium text-slate-600 mb-1">Monto ARS *</label>
+              <label className="win-label">Monto ARS *</label>
               <input
                 type="number"
                 step="0.01"
@@ -198,31 +161,18 @@ function AsignacionModal({ mes, asignacion, fxMes, onClose, onSaved }: Asignacio
                   required: 'Requerido',
                   min: { value: 0.01, message: 'Debe ser mayor a 0' },
                 })}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm
-                           focus:outline-none focus:ring-2 focus:ring-slate-500"
+                className="win-input"
               />
-              {errors.montoArs && (
-                <p className="text-xs text-red-600 mt-1">{errors.montoArs.message}</p>
-              )}
+              {errors.montoArs && <p className="mt-1 text-[11px] text-[#990000]">{errors.montoArs.message}</p>}
             </div>
-
             <div>
-              <label className="block text-xs font-medium text-slate-600 mb-1">FX Tipo *</label>
-              <select
-                {...register('fxTipo', { required: 'Requerido' })}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white
-                           focus:outline-none focus:ring-2 focus:ring-slate-500"
-              >
-                {FX_TIPOS.map((fx) => (
-                  <option key={fx} value={fx}>
-                    {fx}
-                  </option>
-                ))}
+              <label className="win-label">FX Tipo *</label>
+              <select {...register('fxTipo', { required: 'Requerido' })} className="win-select">
+                {FX_TIPOS.map((fx) => <option key={fx} value={fx}>{fx}</option>)}
               </select>
             </div>
-
             <div>
-              <label className="block text-xs font-medium text-slate-600 mb-1">TC *</label>
+              <label className="win-label">TC *</label>
               <input
                 type="number"
                 step="0.0001"
@@ -232,16 +182,15 @@ function AsignacionModal({ mes, asignacion, fxMes, onClose, onSaved }: Asignacio
                   required: 'Requerido',
                   min: { value: 0.0001, message: 'Debe ser mayor a 0' },
                 })}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm
-                           focus:outline-none focus:ring-2 focus:ring-slate-500"
+                className="win-input"
               />
-              {errors.tc && <p className="text-xs text-red-600 mt-1">{errors.tc.message}</p>}
+              {errors.tc && <p className="mt-1 text-[11px] text-[#990000]">{errors.tc.message}</p>}
             </div>
           </div>
 
-          <div>
-            <label className="block text-xs font-medium text-slate-600 mb-1">Monto USD (calculado)</label>
-            <div className="w-full border border-gray-200 bg-gray-50 rounded-lg px-3 py-2 text-sm text-slate-700">
+          <div className="mt-3">
+            <label className="win-label">Monto USD (calculado)</label>
+            <div className="win-inset p-2">
               {new Intl.NumberFormat('en-US', {
                 style: 'currency',
                 currency: 'USD',
@@ -251,36 +200,17 @@ function AsignacionModal({ mes, asignacion, fxMes, onClose, onSaved }: Asignacio
             </div>
           </div>
 
-          <div>
-            <label className="block text-xs font-medium text-slate-600 mb-1">Nota</label>
-            <textarea
-              rows={2}
-              {...register('nota', { maxLength: 200 })}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm resize-none
-                         focus:outline-none focus:ring-2 focus:ring-slate-500"
-              placeholder="Opcional"
-            />
+          <div className="mt-3">
+            <label className="win-label">Nota</label>
+            <textarea rows={2} {...register('nota', { maxLength: 200 })} className="win-textarea" />
           </div>
 
-          {submitError && (
-            <p className="text-sm text-red-600 bg-red-50 rounded-lg px-3 py-2">{submitError}</p>
-          )}
+          {submitError && <p className="win-alert mt-3">{submitError}</p>}
 
-          <div className="flex justify-end gap-3 pt-1">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 text-sm text-slate-600 hover:text-slate-900 transition-colors"
-            >
-              Cancelar
-            </button>
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="px-4 py-2 text-sm font-medium bg-slate-900 text-white rounded-lg
-                         hover:bg-slate-700 disabled:opacity-50 transition-colors"
-            >
-              {isSubmitting ? 'Guardando…' : 'Guardar'}
+          <div className="mt-3 flex justify-end gap-2">
+            <button type="button" onClick={onClose} className="win-btn">Cancelar</button>
+            <button type="submit" disabled={isSubmitting} className="win-btn">
+              {isSubmitting ? 'Guardando...' : 'Guardar'}
             </button>
           </div>
         </form>
@@ -314,175 +244,136 @@ export default function AsignacionPage() {
   const [items, setItems] = useState<Asignacion[]>([])
   const [resumen, setResumen] = useState<ResumenMes | null>(null)
   const [fxMes, setFxMes] = useState<Fx | null>(null)
+  const [fxLoadedMes, setFxLoadedMes] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const [loadingFx, setLoadingFx] = useState(false)
   const [error, setError] = useState('')
   const [modalOpen, setModalOpen] = useState(false)
   const [editando, setEditando] = useState<Asignacion | null>(null)
 
-  useEffect(() => {
-    load()
-  }, [mes]) // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { load() }, [mes]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const load = async () => {
     setLoading(true)
     setError('')
-
     try {
       const [asignacionRes, resumenRes] = await Promise.all([
         api.get<Asignacion[]>('/asignacion', { params: { mes } }),
         api.get<ResumenMes>(`/resumen/${mes}`),
       ])
-
       setItems(asignacionRes.data)
       setResumen(resumenRes.data)
-
-      try {
-        const fxRes = await api.get<Fx>(`/fx/${mes}`)
-        setFxMes(fxRes.data)
-      } catch (e) {
-        if (axios.isAxiosError(e) && e.response?.status === 404) {
-          setFxMes(null)
-        } else {
-          throw e
-        }
-      }
+      setFxMes(null)
+      setFxLoadedMes(null)
     } catch {
-      setError('No se pudo cargar la información de asignación')
+      setError('No se pudo cargar la informacion de asignacion')
     } finally {
       setLoading(false)
     }
   }
 
-  const openNew = () => {
-    setEditando(null)
-    setModalOpen(true)
+  const ensureFxMesLoaded = async () => {
+    if (fxLoadedMes === mes || loadingFx) return
+    setLoadingFx(true)
+    try {
+      const fxRes = await api.get<Fx>(`/fx/${mes}`)
+      setFxMes(fxRes.data)
+      setFxLoadedMes(mes)
+    } catch (e) {
+      if (axios.isAxiosError(e) && e.response?.status === 404) {
+        setFxMes(null)
+        setFxLoadedMes(mes)
+        return
+      }
+      throw e
+    } finally {
+      setLoadingFx(false)
+    }
   }
 
-  const openEdit = (asignacion: Asignacion) => {
+  const openNew = async () => {
+    setEditando(null)
+    setModalOpen(true)
+    try {
+      await ensureFxMesLoaded()
+    } catch {
+      setError('No se pudo cargar FX sugerido')
+    }
+  }
+
+  const openEdit = async (asignacion: Asignacion) => {
     setEditando(asignacion)
     setModalOpen(true)
+    try {
+      await ensureFxMesLoaded()
+    } catch {
+      setError('No se pudo cargar FX sugerido')
+    }
   }
 
   const handleDelete = async (id: string) => {
-    if (!window.confirm('¿Eliminar esta asignación?')) return
+    const confirmed = await confirmWin98('Desea eliminar esta asignacion?', 'Eliminar')
+    if (!confirmed) return
     try {
       await api.delete(`/asignacion/${id}`)
       load()
     } catch {
-      alert('Error al eliminar')
+      await alertWin98('No se pudo eliminar el registro', 'Error')
     }
   }
 
   return (
-    <div>
-      <div className="flex items-center justify-between mb-5">
-        <div>
-          <h1 className="text-xl font-semibold text-slate-900">Asignación</h1>
-          <p className="text-slate-500 text-sm mt-0.5">
-            {mes} · {items.length} {items.length === 1 ? 'registro' : 'registros'}
-          </p>
-        </div>
-        <button
-          onClick={openNew}
-          className="bg-slate-900 text-white text-sm font-medium px-4 py-2 rounded-lg
-                     hover:bg-slate-700 transition-colors"
-        >
-          + Nueva asignación
-        </button>
-      </div>
-
-      <div className="grid grid-cols-4 gap-4 mb-6">
-        <div className="bg-white rounded-xl border border-gray-200 px-5 py-4">
-          <p className="text-xs text-slate-500 mb-1">Ahorro disponible</p>
-          <p className="text-lg font-semibold text-slate-900">{fmt.ars(resumen?.ahorroArs ?? 0)}</p>
-        </div>
-        <div className="bg-white rounded-xl border border-gray-200 px-5 py-4">
-          <p className="text-xs text-slate-500 mb-1">Asignado</p>
-          <p className="text-lg font-semibold text-slate-900">{fmt.ars(resumen?.asignadoArs ?? 0)}</p>
-        </div>
-        <div className="bg-white rounded-xl border border-gray-200 px-5 py-4">
-          <p className="text-xs text-slate-500 mb-1">Sin asignar</p>
-          <p
-            className={`text-lg font-semibold ${
-              (resumen?.sinAsignarArs ?? 0) >= 0 ? 'text-emerald-600' : 'text-red-500'
-            }`}
-          >
-            {fmt.ars(resumen?.sinAsignarArs ?? 0)}
-          </p>
-        </div>
-        <div className="bg-white rounded-xl border border-gray-200 px-5 py-4">
-          <p className="text-xs text-slate-500 mb-1">Asignado USD</p>
-          <p className="text-lg font-semibold text-slate-900">{fmt.usd(resumen?.asignadoUsd ?? 0)}</p>
+    <div className="space-y-3">
+      <div className="win-panel p-2">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <p className="pixel-font text-[20px] leading-none text-[#000080]">Asignacion</p>
+            <p className="mt-1">{mes} | {items.length} registros</p>
+          </div>
+          <button onClick={openNew} className="win-btn">+ Nueva asignacion</button>
         </div>
       </div>
 
-      {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg px-4 py-3 mb-4 text-sm">
-          {error}
-        </div>
-      )}
+      <div className="grid grid-cols-1 gap-2 md:grid-cols-4">
+        <div className="win-card"><p>Ahorro disponible</p><p className="pixel-font text-[20px]">{fmt.ars(resumen?.ahorroArs ?? 0)}</p></div>
+        <div className="win-card"><p>Asignado</p><p className="pixel-font text-[20px]">{fmt.ars(resumen?.asignadoArs ?? 0)}</p></div>
+        <div className="win-card"><p>Sin asignar</p><p className="pixel-font text-[20px]">{fmt.ars(resumen?.sinAsignarArs ?? 0)}</p></div>
+        <div className="win-card"><p>Asignado USD</p><p className="pixel-font text-[20px]">{fmt.usd(resumen?.asignadoUsd ?? 0)}</p></div>
+      </div>
 
-      <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+      {error && <div className="win-alert">{error}</div>}
+
+      <div className="win-inset overflow-auto">
         {loading ? (
-          <div className="py-16 text-center text-slate-400 text-sm">Cargando…</div>
+          <div className="p-8 text-center">Cargando...</div>
         ) : items.length === 0 ? (
-          <div className="py-16 text-center">
-            <p className="text-slate-400 text-sm">No hay asignaciones para {mes}</p>
-            <button
-              onClick={openNew}
-              className="mt-3 text-sm text-slate-900 underline hover:no-underline"
-            >
-              Agregar la primera
-            </button>
+          <div className="p-8 text-center">
+            <p>No hay asignaciones para {mes}</p>
+            <button onClick={openNew} className="win-btn mt-2">Agregar la primera</button>
           </div>
         ) : (
-          <table className="w-full text-sm">
-            <thead className="bg-gray-50 border-b border-gray-200">
+          <table className="win-table min-w-[980px]">
+            <thead>
               <tr>
-                {['Fecha', 'Activo', 'Monto ARS', 'FX Tipo', 'TC', 'Monto USD', 'Nota', ''].map((h) => (
-                  <th
-                    key={h}
-                    className={`px-4 py-3 text-xs font-medium text-slate-500 uppercase tracking-wide ${
-                      h === 'Monto ARS' || h === 'TC' || h === 'Monto USD' ? 'text-right' : 'text-left'
-                    }`}
-                  >
-                    {h}
-                  </th>
+                {['Fecha', 'Activo', 'Monto ARS', 'FX Tipo', 'TC', 'Monto USD', 'Nota', 'Acciones'].map((h) => (
+                  <th key={h} className={h === 'Monto ARS' || h === 'TC' || h === 'Monto USD' ? 'text-right' : ''}>{h}</th>
                 ))}
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody>
               {items.map((item) => (
-                <tr key={item.id} className="hover:bg-gray-50 transition-colors">
-                  <td className="px-4 py-3 text-slate-600 whitespace-nowrap">{fmt.fecha(item.fecha)}</td>
-                  <td className="px-4 py-3 text-slate-700 max-w-[180px] truncate" title={item.activo}>
-                    {item.activo}
-                  </td>
-                  <td className="px-4 py-3 text-right font-medium text-slate-900 whitespace-nowrap">
-                    {fmt.ars(item.montoArs)}
-                  </td>
-                  <td className="px-4 py-3 text-slate-700 whitespace-nowrap">{item.fxTipo}</td>
-                  <td className="px-4 py-3 text-right text-slate-700 whitespace-nowrap">{item.tc.toFixed(4)}</td>
-                  <td className="px-4 py-3 text-right font-medium text-slate-900 whitespace-nowrap">
-                    {fmt.usd(item.montoUsd)}
-                  </td>
-                  <td className="px-4 py-3 text-slate-500 max-w-[180px] truncate" title={item.nota ?? ''}>
-                    {item.nota ?? '—'}
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="flex items-center justify-end gap-3">
-                      <button
-                        onClick={() => openEdit(item)}
-                        className="text-xs text-slate-500 hover:text-slate-900 transition-colors"
-                      >
-                        Editar
-                      </button>
-                      <button
-                        onClick={() => handleDelete(item.id)}
-                        className="text-xs text-red-400 hover:text-red-600 transition-colors"
-                      >
-                        Eliminar
-                      </button>
+                <tr key={item.id}>
+                  <td>{fmt.fecha(item.fecha)}</td>
+                  <td title={item.activo}>{item.activo}</td>
+                  <td className="text-right">{fmt.ars(item.montoArs)}</td>
+                  <td>{item.fxTipo}</td>
+                  <td className="text-right">{item.tc.toFixed(4)}</td>
+                  <td className="text-right">{fmt.usd(item.montoUsd)}</td>
+                  <td>{item.nota ?? '-'}</td>
+                  <td>
+                    <div className="flex justify-end gap-1">
+                      <button onClick={() => openEdit(item)} className="win-btn">Editar</button>
+                      <button onClick={() => handleDelete(item.id)} className="win-btn">Eliminar</button>
                     </div>
                   </td>
                 </tr>

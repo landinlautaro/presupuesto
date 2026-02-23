@@ -54,6 +54,18 @@ export interface ActivoResumen {
   porcentaje: number
 }
 
+export interface SerieMensualResumen {
+  mes: string
+  ingresosArs: number
+  egresosArs: number
+}
+
+export interface DashboardResumen {
+  resumen: ResumenMes
+  activos: ActivoResumen[]
+  serieMensual: SerieMensualResumen[]
+}
+
 export interface CotizacionActual {
   oficial: number | null
   mep: number | null

@@ -1,20 +1,8 @@
-﻿import { useEffect, useMemo, useState } from 'react'
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  Cell,
-  Legend,
-  Pie,
-  PieChart,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from 'recharts'
+import { useEffect, useMemo, useState } from 'react'
+import { Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { useMes } from '../contexts/MesContext'
 import api from '../lib/api'
-import type { ActivoResumen, ResumenMes } from '../types'
+import type { ActivoResumen, DashboardResumen, ResumenMes } from '../types'
 
 interface SerieMensualItem {
   mes: string
@@ -24,7 +12,7 @@ interface SerieMensualItem {
 }
 
 const MESES_ES_CORTO = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic']
-const PIE_COLORS = ['#0f766e', '#1d4ed8', '#7c3aed', '#ea580c', '#b91c1c', '#4d7c0f', '#0f766e', '#9333ea']
+const PIE_COLORS = ['#000080', '#004bb5', '#0078d7', '#2b5797', '#7f7f7f', '#4a4a4a']
 
 const fmt = {
   ars: (n: number) =>
@@ -50,55 +38,29 @@ function buildYearMonths(year: string): string[] {
 export default function DashboardPage() {
   const { mes } = useMes()
   const selectedYear = useMemo(() => mes.split('-')[0], [mes])
-
   const [resumen, setResumen] = useState<ResumenMes | null>(null)
   const [activos, setActivos] = useState<ActivoResumen[]>([])
   const [serieMensual, setSerieMensual] = useState<SerieMensualItem[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
-  useEffect(() => {
-    loadDashboard()
-  }, [mes, selectedYear]) // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { loadDashboard() }, [mes, selectedYear]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const loadDashboard = async () => {
     setLoading(true)
     setError('')
-
     try {
       const months = buildYearMonths(selectedYear)
-
-      const [resumenMes, activosData, resumenesAnuales] = await Promise.all([
-        api.get<ResumenMes>(`/resumen/${mes}`),
-        api.get<ActivoResumen[]>('/resumen/activos'),
-        Promise.all(
-          months.map(async (month) => {
-            try {
-              const { data } = await api.get<ResumenMes>(`/resumen/${month}`)
-              return data
-            } catch {
-              return {
-                ingresosArs: 0,
-                egresosArs: 0,
-                ahorroArs: 0,
-                asignadoArs: 0,
-                sinAsignarArs: 0,
-                asignadoUsd: 0,
-                tcPromedio: 0,
-              } as ResumenMes
-            }
-          })
-        ),
-      ])
-
-      setResumen(resumenMes.data)
-      setActivos(activosData.data)
+      const { data } = await api.get<DashboardResumen>(`/resumen/dashboard/${mes}`)
+      const serieByMes = new Map(data.serieMensual.map((item) => [item.mes, item]))
+      setResumen(data.resumen)
+      setActivos(data.activos)
       setSerieMensual(
-        resumenesAnuales.map((item, index) => ({
-          mes: months[index],
+        months.map((month, index) => ({
+          mes: month,
           label: MESES_ES_CORTO[index],
-          ingresosArs: item.ingresosArs,
-          egresosArs: item.egresosArs,
+          ingresosArs: serieByMes.get(month)?.ingresosArs ?? 0,
+          egresosArs: serieByMes.get(month)?.egresosArs ?? 0,
         }))
       )
     } catch {
@@ -109,93 +71,52 @@ export default function DashboardPage() {
   }
 
   return (
-    <div>
-      <div className="mb-5">
-        <h1 className="text-xl font-semibold text-slate-900">Dashboard</h1>
-        <p className="text-slate-500 text-sm mt-0.5">
-          Mes seleccionado: {mes} · Ano del analisis: {selectedYear}
-        </p>
+    <div className="space-y-3">
+      <div className="win-panel p-2">
+        <p className="pixel-font text-[20px] leading-none text-[#000080]">Dashboard</p>
+        <p className="mt-1">Mes seleccionado: {mes} | Ano del analisis: {selectedYear}</p>
       </div>
 
-      {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg px-4 py-3 mb-4 text-sm">
-          {error}
-        </div>
-      )}
+      {error && <div className="win-alert">{error}</div>}
 
-      <div className="grid grid-cols-5 gap-4 mb-6">
-        <div className="bg-white rounded-xl border border-gray-200 px-5 py-4">
-          <p className="text-xs text-slate-500 mb-1">Ingresos</p>
-          <p className="text-lg font-semibold text-emerald-600">{fmt.ars(resumen?.ingresosArs ?? 0)}</p>
-        </div>
-        <div className="bg-white rounded-xl border border-gray-200 px-5 py-4">
-          <p className="text-xs text-slate-500 mb-1">Egresos</p>
-          <p className="text-lg font-semibold text-red-500">{fmt.ars(resumen?.egresosArs ?? 0)}</p>
-        </div>
-        <div className="bg-white rounded-xl border border-gray-200 px-5 py-4">
-          <p className="text-xs text-slate-500 mb-1">Ahorro</p>
-          <p className={`text-lg font-semibold ${(resumen?.ahorroArs ?? 0) >= 0 ? 'text-slate-900' : 'text-red-500'}`}>
-            {fmt.ars(resumen?.ahorroArs ?? 0)}
-          </p>
-        </div>
-        <div className="bg-white rounded-xl border border-gray-200 px-5 py-4">
-          <p className="text-xs text-slate-500 mb-1">Asignado</p>
-          <p className="text-lg font-semibold text-slate-900">{fmt.ars(resumen?.asignadoArs ?? 0)}</p>
-        </div>
-        <div className="bg-white rounded-xl border border-gray-200 px-5 py-4">
-          <p className="text-xs text-slate-500 mb-1">Sin asignar</p>
-          <p
-            className={`text-lg font-semibold ${
-              (resumen?.sinAsignarArs ?? 0) >= 0 ? 'text-emerald-600' : 'text-red-500'
-            }`}
-          >
-            {fmt.ars(resumen?.sinAsignarArs ?? 0)}
-          </p>
-        </div>
+      <div className="grid grid-cols-1 gap-2 md:grid-cols-5">
+        <div className="win-card"><p>Ingresos</p><p className="pixel-font text-[20px]">{fmt.ars(resumen?.ingresosArs ?? 0)}</p></div>
+        <div className="win-card"><p>Egresos</p><p className="pixel-font text-[20px]">{fmt.ars(resumen?.egresosArs ?? 0)}</p></div>
+        <div className="win-card"><p>Ahorro</p><p className="pixel-font text-[20px]">{fmt.ars(resumen?.ahorroArs ?? 0)}</p></div>
+        <div className="win-card"><p>Asignado</p><p className="pixel-font text-[20px]">{fmt.ars(resumen?.asignadoArs ?? 0)}</p></div>
+        <div className="win-card"><p>Sin asignar</p><p className="pixel-font text-[20px]">{fmt.ars(resumen?.sinAsignarArs ?? 0)}</p></div>
       </div>
 
       {loading ? (
-        <div className="py-16 text-center text-slate-400 text-sm">Cargando dashboard...</div>
+        <div className="win-panel p-8 text-center">Cargando dashboard...</div>
       ) : (
-        <div className="grid grid-cols-2 gap-6">
-          <div className="bg-white rounded-xl border border-gray-200 p-4">
-            <h2 className="text-sm font-semibold text-slate-800 mb-3">Ingresos vs Egresos por mes ({selectedYear})</h2>
-            <div className="h-[320px]">
+        <div className="grid grid-cols-1 gap-3 xl:grid-cols-2">
+          <div className="win-panel p-2">
+            <p className="pixel-font text-[18px] leading-none">Ingresos vs Egresos ({selectedYear})</p>
+            <div className="mt-2 h-[320px]">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={serieMensual}>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                  <CartesianGrid stroke="#9e9e9e" strokeDasharray="2 2" vertical={false} />
                   <XAxis dataKey="label" />
                   <YAxis tickFormatter={(value) => Intl.NumberFormat('es-AR').format(value)} />
                   <Tooltip formatter={(value: number) => fmt.ars(value)} />
-                  <Legend />
-                  <Bar dataKey="ingresosArs" name="Ingresos" fill="#059669" radius={[4, 4, 0, 0]} />
-                  <Bar dataKey="egresosArs" name="Egresos" fill="#dc2626" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="ingresosArs" name="Ingresos" fill="#0078d7" />
+                  <Bar dataKey="egresosArs" name="Egresos" fill="#000080" />
                 </BarChart>
               </ResponsiveContainer>
             </div>
           </div>
 
-          <div className="bg-white rounded-xl border border-gray-200 p-4">
-            <h2 className="text-sm font-semibold text-slate-800 mb-1">Distribucion de activos</h2>
-            <p className="text-xs text-slate-500 mb-3">Acumulado historico de asignaciones</p>
-
+          <div className="win-panel p-2">
+            <p className="pixel-font text-[18px] leading-none">Distribucion de activos</p>
+            <p className="mt-1">Acumulado historico de asignaciones</p>
             {activos.length === 0 ? (
-              <div className="h-[320px] flex items-center justify-center text-slate-400 text-sm">
-                Sin asignaciones para graficar
-              </div>
+              <div className="mt-2 h-[320px] grid place-items-center">Sin asignaciones para graficar</div>
             ) : (
-              <div className="h-[320px]">
+              <div className="mt-2 h-[320px]">
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
-                    <Pie
-                      data={activos}
-                      dataKey="totalArs"
-                      nameKey="activo"
-                      cx="50%"
-                      cy="50%"
-                      outerRadius={110}
-                      label={({ name, percent }) => `${name} ${(percent * 100).toFixed(1)}%`}
-                    >
+                    <Pie data={activos} dataKey="totalArs" nameKey="activo" cx="50%" cy="50%" outerRadius={110}>
                       {activos.map((item, index) => (
                         <Cell key={`${item.activo}-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
                       ))}
@@ -203,7 +124,7 @@ export default function DashboardPage() {
                     <Tooltip
                       formatter={(value: number, _name, item) => {
                         const payload = item.payload as ActivoResumen
-                        return [`${fmt.ars(value)} · ${fmt.usd(payload.totalUsd)}`, payload.activo]
+                        return [`${fmt.ars(value)} | ${fmt.usd(payload.totalUsd)}`, payload.activo]
                       }}
                     />
                   </PieChart>
